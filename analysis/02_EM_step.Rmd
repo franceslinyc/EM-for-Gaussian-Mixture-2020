@@ -1,0 +1,112 @@
+---
+title: "02_EM_step"
+author: "Frances Lin"
+date: "11/18/2020"
+output: pdf_document
+---
+
+### Description
+
+This .Rmd file contains the very rough draft of how the `e_step()` and the `m_step()` functions are created and can be skipped. Details (descriptions, codes, and usages) of these functions can be found in the R folder. 
+
+### Load packages
+
+```{r message=FALSE, warning=FALSE}
+library(here)
+library(tidyverse)
+library(tibble)
+library(stats)
+```
+
+### Load data 
+
+```{r}
+data <- readRDS(here("results", "data.rds"))
+head(data)
+```
+
+### Load initial values and rename to df 
+
+```{r}
+df_summary_kmeans <- readRDS(here("results", "df_summary_kmeans.rds"))
+df <- df_summary_kmeans
+df 
+```
+
+### E-step: Obtain posterior probability (or soft labelling) using Bayes Rule
+
+```{r}
+# prior probability (or mixing weight) 
+pi_1 <- df$pi[1]
+pi_2 <- df$pi[2]
+
+# top of the posterior equation (or incomplete likelihood and prior probability)
+prob_1 <- dnorm(x = data$value, mean = df$mean[1], sd = df$sd[1]) * pi_1 
+prob_2 <- dnorm(x = data$value, mean = df$mean[2], sd = df$sd[2]) * pi_2
+
+# bottom of the posterior equation (or normalizing constant)
+normalizer <- prob_1+ prob_2
+
+# posterior probability
+post_1 <- prob_1 / normalizer
+post_2 <- prob_2 / normalizer
+```
+
+### E-step: Log-likelihood of the first interaction
+
+```{r}
+likelihood <- prob_1 + prob_2
+log_likelihood <- log(likelihood)
+result <- sum(log_likelihood)
+result
+```
+
+### Check to see if it makes sense
+
+```{r}
+data <- data %>%
+  mutate(
+    post_1 = post_1, 
+    post_2 = post_2
+  )
+# since value 1 to 6 belongs to component A 
+# should assign more weights to the 1st component 
+# should assign more weights to the 2nd component for value 195 to 200
+# also recall that 
+# mu_1 <- 0 for component A (or 1)
+# sd_1 <- 1
+# mu_2 <- 4 for component B (or 2)  # mu_2 <- 2 for component B (or 2)  
+# sd_2 <- 1
+head(data)
+tail(data)
+```
+
+### M-step: Optimize the parameters using maximum likelihood
+
+```{r}
+# Obtain mean
+mean_1 <- sum(post_1 * data$value) / sum(post_1)
+mean_2 <- sum(post_2 * data$value) / sum(post_2)
+
+# Obtain variance
+var_1 <- sum(post_1 * (data$value - mean_1) ^ 2) / sum(post_1)
+var_2 <- sum(post_2 * (data$value - mean_2) ^ 2) / sum(post_2)
+
+# Obtain pi
+pi_1 <- sum(post_1) / length(data$value)
+pi_2 <- sum(post_2) / length(data$value)
+```
+
+### Parameters of the first interaction
+
+```{r}
+df_EM <- tibble(
+  custer = c(1, 2), 
+  mean = c(mean_1, mean_2),
+  var = c(var_1, var_2),
+  sd = c(sqrt(var_1), sqrt(var_2)),
+  pi = c(pi_1, pi_2)
+)
+df_EM
+```
+

@@ -1,0 +1,93 @@
+---
+title: "01_initialization_kmeans"
+author: "Frances Lin"
+date: "11/11/2020"
+output: pdf_document
+---
+
+### Description
+
+This .Rmd file calculates the initial estimates for the first EM iteration using K-means clustering. All related results can be found in the results folder. 
+
+### Load packages
+
+```{r message=FALSE, warning=FALSE}
+library(here)
+library(tidyverse)
+library(tibble)
+library(stats)
+```
+
+The author of this [article](https://tinyheero.github.io/2016/01/03/gmm-em.html#references) suggests that it is common to use K-means clustering (hard labelling) to obtain the initial estimates for EM algorithm (the soft labelling).
+
+### Load data
+
+```{r}
+data <- readRDS(here("results", "data.rds"))
+head(data)
+```
+
+### Perform k-mean clustering
+
+```{r}
+# K-means clustering is "hard" because we assign k = 2 
+# (i.e. a data point is either 1 or 2)
+value <- data$value
+kmeans <- kmeans(x = value, centers = 2) 
+kmeans_cluster <- kmeans$cluster
+```
+
+### Plot k-mean clustering
+
+```{r}
+df_kmeans <- tibble(
+  value = value, 
+  cluster = kmeans_cluster
+)
+head(df_kmeans)
+```
+
+```{r}
+df_plot_kmeans <- df_kmeans %>%
+  mutate(data_number = row_number()) %>%
+  ggplot(aes(x = value, y = data_number, color = factor(cluster))) +
+  geom_point() + 
+  ggtitle("K-means Clustering")
+df_plot_kmeans
+```
+
+### Store the values from K-means clustering, which then become initial estimates for EM algorithm
+
+Estimate mean $(\mu_1, \mu_2)$ and sd $(\sigma_1, \sigma_2)$ 
+
+```{r}
+df_summary_kmeans <- df_kmeans %>%
+  group_by(cluster) %>%
+  summarize(
+    mean = mean(value), 
+    var = var(value), 
+    sd = sd(value),
+    size = length(value)
+  )
+df_summary_kmeans
+```
+
+Estimate weighting probability $\pi$ 
+
+```{r}
+df_summary_kmeans <- df_summary_kmeans %>% 
+  mutate(
+    pi = size / sum(size))
+df_summary_kmeans
+```
+
+Now we can pass the values to EM algorithm
+
+### Save out results
+
+```{r}
+write_rds(df_kmeans, here("results", "df_kmeans.rds"))
+write_rds(df_plot_kmeans, here("results", "df_plot_kmeans.rds"))
+write_rds(df_summary_kmeans, here("results", "df_summary_kmeans.rds"))
+```
+

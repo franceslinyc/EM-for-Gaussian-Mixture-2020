@@ -1,0 +1,71 @@
+---
+title: "06_Appendix"
+author: "Frances Lin"
+date: "Fall 2020"
+output: pdf_document
+---
+
+# Appendix
+
+## A Rough Sketch of the Implementation
+
+Recall that the algorithm consists of three steps:
+
+1. Initialization
+
+2. The E-step 
+
+3. The M-step
+
+`for (i in 1:iterations){`
+
+|      `if (i = 1){`
+
+|       `# initialization`
+
+|       `# E-step:` 
+
+|       1. pass data & initial estimates from `k-means` to `e_step` and store as `e_out`
+
+|           return posterior probability & log-likelihood
+
+|       `# M-step:` 
+
+|       2. pass the posterior probablity from `e_out` to `m_step` and store as `m_out`
+
+|           return estimates (e.g. $\mu, \sigma, \pi$)
+
+|       `# current log-likelihood`
+
+|       3. store the `log-likelihood` from `e_out` to `current log-likelihood`
+
+|      `} else {`
+
+|       `# E-step`
+
+|       1. pass data & current estimates obtained from `m_out` to `e_step` and store as `e_out`
+
+|       `# M-step`
+
+|       2. pass the posterior probability from `e_out` to `m_step` and store as `m_out`
+
+|       `# check`
+
+|       3. calculate the difference between `current log-likelihood` & `current + 1 log-likelihood`
+
+|      `if (`convergence (i.e. change is minimal) `){`
+
+|       `break`
+
+|      `} else {`
+
+|       1. set `current + 1 log-likelihood` to `current log-likelihood`
+
+|       2. repeat E-step and M-step
+
+|      `}` 
+
+|      `}` 
+
+`}` 
+

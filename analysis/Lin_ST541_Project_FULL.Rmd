@@ -1,0 +1,382 @@
+---
+title: "EM (Expectation-Maximization) Algorithm with An Application for Gaussian Mixture Model"
+author: "Frances Lin"
+date: "Fall 2020"
+output: pdf_document
+---
+
+# Abstract
+
+We first discuss the conditions under which EM algorithm can be used to find (local) maximum likelihood estimate (MLE) of parameter, as compared to other iterative method such as Newton-Raphson, Fisher's scoring, and IRLS (iteratively reweighted least squares). Then, we briefly review MLE and posterior probability. Next, we introduce the EM algorithm in the context of the Gaussian mixture model and expand the E-step and the M-step of the algorithm in details. Finally, we apply the algorithm to a simulated dataset that follows a two-component Gaussian mixture distribution and evaluate its performance. 
+
+# Introduction
+
+Optimization problems occur in a variety of fields such as mechanics, economics and finance, various engineering fields, operations research, and machine learning. Many optimization methods have been proposed in math, computer science and statistics as a result. Some of the methods include Newton-Raphson, Fisher scoring, IRLS (iteratively reweighted least squares) for glm (generalized linear model), etc. Among them, EM algorithm, short for “Expectation-Maximization” algorithm, first invented by computer scientist and later generalized by Dempster, Laird, and Rubin in a classic 1977 paper, is an iterative method that is particular useful for finding MLE for incomplete or missing data or when maximizing the target likelihood function is challenging. 
+
+As the name implies, “E” for “Expectation” and “M” for “Maximization”, once initialized, EM algorithm iterate between the E-step and the M-step untill convergence. Comparing to method such as Newton-Raphson, EM algorithm requires simple implementation and has stable convergence. Comparing to IRLS, EM algorithm becomes IRLS in certain models. Note that EM algorithm is an umbrella term for a class of algorithm that iterates between expectation and maximization. Some of the applications include EM algorithm for missing data, for grouped, censored, or truncated data, for finite mixture models, for factor analysis, etc. For motivating example, we choose to focus on EM algorithm for Gaussian mixture models. For illustration, we apply EM algorithm to a simulated dataset that follows a two-component Gaussian mixture distribution. 
+
+# Review 
+
+## MLE 
+
+MLE (maximum likelihood estimation) is a commonly used method in statistics for finding estimate of parameter, as maximum likelihood estimator has a lot of nice properties. Estimate is found by maximizing the likelihood function
+
+$$
+\mathcal{L}(\theta | X) = \prod_{i = 1}^{n} p(X | \theta)
+$$
+
+## Posterior Probability 
+
+Give that the data $X$ has a likelihood $p( X | Z )$ and a prior belief that the probability distribution is $p(Z)$, then the posterior probability is defined as 
+$$
+p( Z | X) = \frac{p( X | Z) p( Z )} {p( X )} 
+$$
+
+A key feature of the EM algorithm is that it makes use of the posterior probability $p( Z | X )$ (as supposed to $p (Z)$) in the E-step. 
+
+# Setup
+
+## Gaussian mixture model
+
+Suppose that the data $X_i$ comes from a mixture model with $K$ components, then the complete data {$X, Z$} is made up of the incomplete (or observed) data $X$ and the latent (or missing) variable $Z \in$ {$1, 2,..., k$}. 
+
+The mixture model is defined as 
+
+$$
+p(X, Z) = \sum_{k=1}^{k} p(Z) p(X | Z) 
+$$
+
+The distribution of $Z$, $p (Z_i = k)$ (i.e. the probability associated with $k^{th}$ component,) is called mixture weight, where $p (Z_i = k) = \pi_k$ and $\sum_{k} \pi_k = 1$. 
+
+On the other hand, the conditional distribution of $X$, $p (X_i | Z_i = k)$ (i.e the probability of x assuming that it comes from the $k^{th}$ component,) is called mixture component.
+
+If the mixture component follows normal distribution, then it is called the Gaussian mixture model, and it has the form of
+
+$$
+p(X, Z) = \sum_{k=1}^{k} \pi_k  \  \mathcal{N} (x_i | \mu_k, \sigma_k)
+$$
+
+Together, we also say that
+
+$$
+X_i | Z_i = k \sim \mathcal{N} (\mu_k, \sigma_k) \ with \ p(Z_i = k) = \pi_k
+$$
+
+The complete likelihood of Gaussian mixture model is 
+
+$$
+p(X, Z | \theta =\mu, \sigma, \pi) = \prod_{i=1}^{n} \prod_{k=1}^{k} \pi_k ^ {I(Z_i =k)} \  \mathcal{N} (x_i | \mu_k, \sigma_k) ^ {I(Z_i =k)}
+$$
+
+The complete log-likelihood of Gaussian mixture model is then 
+
+$$
+\log p(X, Z | \theta =\mu, \sigma, \pi) = \sum_{i=1}^{n} \sum_{k=1}^{k} {I(Z_i =k)} \log \pi_k  +  {I(Z_i =k)} \log \mathcal{N} (x_i | \mu_k, \sigma_k)
+$$
+
+We cannot evaluate the complete log-likelihood because of the latent (or missing) variable $Z$. However, we can make use of that the posterior distribution of $Z$, $p(Z | X)$ contains the information we need about $Z$. 
+
+## EM algorithm for Gaussian mixture 
+
+During the initialization, we set the initial estimates. This can be done in various ways, but a common practice is to use K-means clustering.  
+
+In the E-step, we first calculate the posterior probability $p( Z | X, \theta^{0} )$ using data $X$ and current estimates of parameters $\theta^{0}$. Then, we take expectation of the complete log-likelihood with respect to (w.r.t) this posterior probability. This expectation is expressed in literature as: 
+
+$$
+Q (\theta, \theta^{0}) = E_{Z | X, \theta^{0}} \log(p(X, Z | \theta)) = \sum_Z p(Z | X, \theta^{0}) \log(p(X, Z | \theta))
+$$
+
+In the M-step, we re-estimate the next (or current + 1) parameters by maximizing $Q$
+
+$$
+\hat\theta = \theta^{0 + 1} = argmax_\theta \ Q (\theta, \theta^{0})
+$$
+
+## A Rough Sketch of the Implementation
+
+Recall that the algorithm consists of three steps:
+
+1. Initialization
+
+2. The E-step 
+
+3. The M-step
+
+`for (i in 1:iterations){`
+
+|      `if (i = 1){`
+
+|       `# initialization`
+
+|       `# E-step:` 
+
+|       1. pass data & initial estimates from `k-means` to `e_step` and store as `e_out`
+
+|           return posterior probability & log-likelihood
+
+|       `# M-step:` 
+
+|       2. pass the posterior probablity from `e_out` to `m_step` and store as `m_out`
+
+|           return estimates (e.g. $\mu, \sigma, \pi$)
+
+|       `# current log-likelihood`
+
+|       3. store the `log-likelihood` from `e_out` to `current log-likelihood`
+
+|      `} else {`
+
+|       `# E-step`
+
+|       1. pass data & current estimates obtained from `m_out` to `e_step` and store as `e_out`
+
+|       `# M-step`
+
+|       2. pass the posterior probability from `e_out` to `m_step` and store as `m_out`
+
+|       `# check`
+
+|       3. calculate the difference between `current log-likelihood` & `current + 1 log-likelihood`
+
+|      `if (`convergence (i.e. change is minimal) `){`
+
+|       `break`
+
+|      `} else {`
+
+|       1. set `current + 1 log-likelihood` to `current log-likelihood`
+
+|       2. repeat E-step and M-step
+
+|      `}` 
+
+|      `}` 
+
+`}` 
+
+# Application
+
+For illustration, we apply EM algorithm to a simulated dataset that follows a two-component Gaussian mixture distribution.
+
+```{r include=FALSE} 
+# Set global options
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo = FALSE) 
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(tibble)
+library(stats)
+library(ggplot2)
+library(gridExtra)
+library(pander)
+```
+
+## Simulated data
+
+We use the `rnorm` function from the `stats` package to simulate 100 data points that follow $\mathcal{N}(0,1)$ and 100 data points that follow $\mathcal{N}(2,1)$.  
+
+The first 3 values of each distribution are: 
+
+```{r}
+set <- c(1:3, 101:103)
+data <- readRDS(here("results", "data.rds"))
+data[set, ] %>% pander
+```
+
+Here is a graph: 
+
+```{r}
+# # Cannot load
+# data_plot <- readRDS(here("results", "data_plot.rds"))
+# data_plot
+```
+
+```{r}
+# Copy & paste from 00_simulated_data because cannot load
+data_flat_plot <- data %>%
+  ggplot(aes(x = value, y = "A", color = factor(component))) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Complete Dataset") + 
+  coord_fixed(ratio = 0.6) + # shrink the plot 
+  theme(legend.position = "none") # remove legend to make it consistent
+data_flat_plot
+```
+
+We obtain the estimates of parameters using MLE 
+
+$$
+\mu_k = \frac{ \sum x_{i,k}} {N_k}, \sigma_k^2 = \frac{ \sum (x_{i,k} - \mu_k) ^ 2} {N_k}
+$$
+
+The estimates of parameters (i.e. $\mu, \sigma$) are: 
+
+```{r}
+data_summary <- readRDS(here("results", "data_summary.rds"))
+data_summary <- select(
+  data_summary, -var) # remove var
+data_summary %>% pander
+```
+
+Now suppose that we do not know which distribution each data point is from (i.e. the latent (or missing) variable $Z_i$ is involved.) This is when the EM algorithm can be of use.
+
+Here is a graph: 
+
+```{r}
+# # Cannot load
+# data_plot_latent <- readRDS(here("results", "data_plot_latent.rds"))
+# data_plot_latent
+```
+
+```{r}
+data_flat_plot_latent <- data %>%
+  ggplot(aes(x = value, y = "A")) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Incomplete Dataset") + 
+  coord_fixed(ratio = 0.6) # shrink the plot 
+data_flat_plot_latent
+```
+
+## Initialization using K-means clustering
+
+Recall from class and lab that we discuss several ways such as plotting or finding the median or interquartile range (IQR) to set up initial values. Here, we use the `kmeans` function from the `stats` package to obtain initial values for the first EM initial iteration, as it is a common practice to use k-means clustering to find such values. For reference, k-means clustering is considered a method of hard labelling, as the data point is labelled as either $cluster_1$ or $cluster_2$ using the Euclidean distance. 
+
+The output of the first 3 values of each distribution are: 
+
+```{r}
+df_kmeans <- readRDS(here("results", "df_kmeans.rds"))
+#head(df_kmeans) %>% pander
+df_kmeans[set, ] %>% pander
+```
+
+Here is a graph:
+
+```{r}
+df_plot_kmeans <- readRDS(here("results", "df_plot_kmeans.rds"))
+df_plot_kmeans
+```
+
+We obtain the estimates of parameters using MLE 
+
+$$
+\mu_k = \frac{ \sum x_{i,k}} {N_k}, \sigma_k^2 = \frac{ \sum (x_{i,k} - \mu_k) ^ 2} {N_k}, \pi_k = \frac{N_k} {N}
+$$
+
+The estimates of parameters (i.e. $\mu, \sigma, \pi$) obtained from K-means are: 
+
+```{r}
+df_summary_kmeans <- readRDS(here("results", "df_summary_kmeans.rds"))
+summary_kmeans <- select(
+  df_summary_kmeans, -c(var, size)) # remove var and size
+summary_kmeans %>% pander
+```
+
+## E-step: Calculate posterior probability (or soft labelling) using Bayes Rule and pass it to M-step & store log likelihood to check for convergence
+
+In the E-step of the first iteration, we calcuate the posterior probability of the latent variable $Z_i = k$ given the observations $X_i$ (i.e. $x_i$ belongs to the $k^{th}$ cluster) using the estimates of parameters obtained from K-means. Specifically, given that $X_i$ have an (incomplete) likelihood $p( X_i | Z_i = k ) = \mathcal{N}(x_i | \mu_{k}, \sigma^2_{k})$ and a prior belief that $Z_i$ follows a probability distribution function $p(Z_i = k) = \pi_{k}$, the posterior probability of the latent variable $Z_i = k$ given the observations $X_i$ (i.e. $x_i$ belongs to the $k^{th}$ cluster) is then given as follows  
+
+$$
+p( Z_i = k | X_i ) = \frac{p( X_i | Z_i = k ) p( Z_i = k )}{p( X_i )} 
+$$
+
+The output of the first 3 values of each distribution are: 
+
+```{r}
+e_out <- readRDS(here("results", "e_out.rds"))
+e_out <- tibble(
+  "value" = df_kmeans$value,
+  "post_1" = e_out$posterior_prob[, 1],
+  "post_2" = e_out$posterior_prob[, 2]
+)
+e_out[set, ] %>% pander
+```
+
+In the E-step, we also compute and store the log likelihood to check for convergence. 
+
+## M-step: Replace hard labelling with posterior probability (or soft labelling) and optimize the parameters using MLE & return the final estimates if convergence happens
+
+In the M-step, we re-estimate the parameters replacing hard labelling $N_k$ with posterior probability (or soft labelling) $p(Z_i = k | X_i)$. 
+
+Recall that in k-means, we have that 
+
+$$
+\mu_k = \frac{ \sum_{i=1}^{N_k} x_{i,k}} {N_k}, \sigma_k^2 = \frac{ \sum_{i=1}^{N_k} (x_{i,k} - \mu_k) ^ 2} {N_k}, \pi_k = \frac{N_k} {N}
+$$
+
+After replacing, we have that 
+
+$$
+\mu_k = \frac{ \sum_{i=1}^{N} p(Z_i = k | X_i) x_{i}} {\sum_{i=1}^{N} p(Z_i = k | X_i)}, \sigma_k^2 = \frac{ \sum_{i=1}^{N} p(Z_i = k | X_i) (x_{i} - \mu_k) ^ 2} {\sum_{i=1}^{N} p(Z_i = k | X_i)}, \pi_k = \frac{\sum_{i=1}^{N} p(Z_i = k | X_i)} {N}
+$$
+
+In the M-step, if convergence happens, we also return the final estimates that maximize the likelihood. 
+
+The final estimates of parameters (i.e. $\mu, \sigma, \pi$) are: 
+
+```{r}
+summary_em <- readRDS(here("results", "result_1_parameters.rds"))
+summary_em <- summary_em %>% mutate( # add a column named cluster
+  "cluster" = c(1, 2)
+) %>% relocate(cluster)              # change column position
+summary_em %>% pander
+```
+
+## Convergence: Iterate between the E-step and the M-step untill convergence
+
+Recall from calculus that given a function $f(x)$ that is continuous on an interval $I \in (c - \epsilon, c + \epsilon)$ for $\epsilon > 0$, optimization occurs at $x = c$ where $f'(x) \approx 0$ and we check $f''(x)$ to see if $c$ is a (local) maximum or a minimum. Because of the latent (or missing) variable $Z_i$, we are unable to solve for the estimates. Instead, we check and update estimates by iterating between the E-step and the M-step untill convergence (i.e. change is minimal). Specifically, we compute and store the log likelihood at each EM iteration and compare this log likelihood to the log likehood of the previous iteration to see if the change is minimal. If the change is minimal (i.e. convergence), we stop and the estimates that the M-step returns are the final estimates. If it isn't, then we repeat another EM step. 
+
+Convergence occurs at 31st iteration with log likelihood = -351.4: 
+
+```{r}
+# Can load
+log_likelihood <- readRDS(here("results", "log_likelihood.rds"))
+current_log_likelihood <- readRDS(here("results", "current_log_likelihood.rds"))
+n_iterations <- readRDS(here("results", "n_iterations.rds"))
+
+# # Still cannot load
+# result_2 <- readRDS(here("results", "result_2_max_log_like.rds"))
+# result_3 <- readRDS(here("results", "result_3_plot_log_likelihood.rds"))
+# result_3
+# result_1 %>% pander
+```
+
+```{r}
+# Copy & paste from 03_EM_iteration.Rmd because cannot load
+# Plot (incomplete) log likelihood 
+result_3_plot_log_likelihood <- qplot(x = 1:n_iterations, y = log_likelihood, 
+                             xlab = "iterations", 
+                             ylab = "(incomplete) log likelihood")
+result_3_plot_log_likelihood
+
+# Combine EM results 
+result_2_max_log_like <- tibble(
+  "max_log_likelihood" = current_log_likelihood, 
+  "#s of iterations" = n_iterations
+)
+result_2_max_log_like %>% pander
+```
+
+# Discussion 
+
+We see that the final estimates are not quite what we look for. This could be because of the initial values using K-means clustering, but the major reason is perhaps due to the simulated data. There is a lot of overlap between the 100 simulated data points that follow $\mathcal{N}(0,1)$ and another 100 data points that follow $\mathcal{N}(2,1)$. We expect EM algorithm to perform better if the overlap is not as wide as in our example, and it does (We re-simulate 100 data points that follow $\mathcal{N}(0,1)$ and another 100 data points that follow $\mathcal{N}(4,1)$ and find that the estimates are more accurate and convergence happens earlier now at 12th iteration.)
+
+We also see how EM algorithm can be applied to two-component Gaussian mixture model. A logical next step is to expand the algorithm for k-component Gaussian mixture model and for other mixture model such as multinomial. 
+
+# Reference 
+
+[Fitting a Mixture Model Using the Expectation-Maximization Algorithm in R](https://tinyheero.github.io/2016/01/03/gmm-em.html)
+
+[Introduction to EM: Gaussian Mixture Models](https://stephens999.github.io/fiveMinuteStats/intro_to_em.html)
+
+
+# Terminology
+
+[EM algorithm and GMM model](https://en.wikipedia.org/wiki/EM_algorithm_and_GMM_model)
+
+[Maximum likelihood estimation](https://en.wikipedia.org/wiki/Maximum_likelihood_estimation)
+
+[Mixture model](https://en.wikipedia.org/wiki/Mixture_model)
+
+[Posterior probability](https://en.wikipedia.org/wiki/Posterior_probability)
+

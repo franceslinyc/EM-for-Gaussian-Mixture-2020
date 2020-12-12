@@ -1,0 +1,192 @@
+---
+title: "EM (Expectation-Maximization) Algorithm with An Application for Gaussian Mixture Model"
+author: "Frances Lin"
+date: "Fall 2020"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+EM algorithm, short for “Expectation-Maximization” algorithm is an iterative method that is particular useful for finding maximum likelihood estimate (MLE) for missing data or when maximizing the likelihood function is challenging.
+
+It is an umbrella term for a class of algorithm that iterates between expectation and maximization. Applications include EM algorithm for missing data, for censored data, for finite mixture models, etc. 
+
+## Simulated data: 2-component Gaussian mixture
+
+For illustration, we apply EM algorithm to a simulated dataset that follows a two-component Gaussian mixture distribution.
+
+We simulate 100 data points that follow $\mathcal{N}(0,1)$ and 100 data points that follow $\mathcal{N}(2,1)$.  
+
+```{r include=FALSE} 
+# Set global options
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo = FALSE) 
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(tibble)
+library(stats)
+library(ggplot2)
+library(gridExtra)
+library(pander)
+```
+
+```{r}
+set <- c(1:3, 101:103)
+data <- readRDS(here("results", "data.rds"))
+#data[set, ] %>% pander
+```
+
+```{r}
+# Copy & paste from 00_simulated_data because cannot load
+data_flat_plot <- data %>%
+  ggplot(aes(x = value, y = "A", color = factor(component))) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Complete Dataset") + 
+  coord_fixed(ratio = 0.6) + # shrink the plot 
+  theme(legend.position = "none") # remove legend to make it consistent
+data_flat_plot
+```
+
+## Simulated data: 2-component Gaussian mixture
+
+Now suppose that we do not know which distribution each data point is from (i.e. the latent (or missing) variable $Z$ is involved.) This is when the EM algorithm can be of use.
+
+```{r}
+data_flat_plot_latent <- data %>%
+  ggplot(aes(x = value, y = "A")) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Incomplete Dataset") + 
+  coord_fixed(ratio = 0.6) # shrink the plot 
+data_flat_plot_latent
+```
+
+## EM algorithm for Gaussian mixture 
+
+The algorithm consists of three steps:
+
+1. Initialization
+
+2. The E-step 
+
+3. The M-step
+
+.... Iteration between E-step and M-step untill convergence 
+
+## Step 1: Initialization using K-means clustering
+
+Set initial estimates for the first EM iteration using the `kmeans` function from the `stats` package
+
+```{r}
+df_plot_kmeans <- readRDS(here("results", "df_plot_kmeans.rds"))
+df_plot_kmeans
+```
+
+## Step 2: The E-step
+
+E-step in literature
+
+$$
+Q (\theta, \theta^{0}) = E_{Z | X, \theta^{0}} \log(p(X, Z | \theta)) = \sum_Z p(Z | X, \theta^{0}) \log(p(X, Z | \theta))
+$$
+
+Implementing
+
+1. Calculate posterior probability (or soft labelling) $p(Z | X)$ using data $X$ and initial estimates $\theta^{0}$ and pass it to M-step
+
+2. Compute and store the log likelihood to check for convergence
+
+## Step 3: The M-step
+
+M-step in literature
+
+$$
+\hat\theta = \theta^{0 + 1} = argmax_\theta \ Q (\theta, \theta^{0})
+$$
+
+Implementing
+
+1. Replace hard labelling $N_k$ with posterior probability (or soft labelling) $p(Z | X)$ and optimize the parameters using MLE
+
+2. Return the final estimates that maximize the likelihood, if convergence happens
+
+## Convergence: Iterate between E-step and M-step untill convergence 
+
+Compare log-likelihood of current iteration to log-likelihood of previous iteraction to see if the change is minimal 
+
+If the change is minimal (i.e. convergence), we stop and return the final estimates. If it isn't, then we repeat another EM step.
+
+|                  ...
+
+|                  ...
+
+|                  `if (`convergence`){`
+
+|                   `break`
+
+|                  `} else {`
+
+|                   1. set `log-likelihood`$^{0+1}$ to `log-likelihood`$^{0}$
+
+|                   2. repeat E-step and M-step
+
+|                  `}` 
+
+## Convergence: Iterate between E-step and M-step untill convergence 
+
+The final estimates of parameters (i.e. $\mu, \sigma, \pi$) are: 
+
+```{r}
+summary_em <- readRDS(here("results", "result_1_parameters.rds"))
+summary_em <- summary_em %>% mutate( # add a column named cluster
+  "cluster" = c(1, 2)
+) %>% relocate(cluster)              # change column position
+summary_em %>% pander
+```
+
+```{r}
+# Can load
+log_likelihood <- readRDS(here("results", "log_likelihood.rds"))
+current_log_likelihood <- readRDS(here("results", "current_log_likelihood.rds"))
+n_iterations <- readRDS(here("results", "n_iterations.rds"))
+```
+
+Convergence happens at: 
+
+```{r}
+# Combine EM results 
+result_2_max_log_like <- tibble(
+  "max_log_likelihood" = current_log_likelihood, 
+  "#s of iterations" = n_iterations
+)
+result_2_max_log_like %>% pander
+```
+
+## Convergence: Iterate between E-step and M-step untill convergence 
+
+```{r}
+# Copy & paste from 03_EM_iteration.Rmd because cannot load
+# Plot (incomplete) log likelihood 
+result_3_plot_log_likelihood <- qplot(x = 1:n_iterations, y = log_likelihood, 
+                             xlab = "iterations", 
+                             ylab = "(incomplete) log likelihood")
+result_3_plot_log_likelihood
+```
+
+## Thank you!
+
+EM (Expectation-Maximization) Algorithm with An Application for Gaussian Mixture Model
+
+Frances Lin
+
+MS student, Dept. of Statistics, Oregon State University
+
+[GitHub project repository](https://github.com/ST541-Fall2020/linyuchu-project-EM-algorithm-for-Gaussian-mixtures)
+
+
+

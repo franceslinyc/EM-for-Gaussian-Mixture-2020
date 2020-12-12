@@ -1,0 +1,117 @@
+---
+title: "00_simulated_data"
+author: "Frances Lin"
+date: "11/11/2020"
+output: pdf_document
+---
+
+### Description
+
+This .Rmd file creates simulated data for the two-component Gaussian mixture. All related results can be found in the results folder. 
+
+### Load packages
+
+```{r message=FALSE, warning=FALSE}
+library(here)
+library(tidyverse)
+library(tibble)
+library(ggplot2)
+library(gridExtra)
+```
+
+### Simulate data
+
+Specify the values and parameters for the two-component Gaussian mixture
+```{r}
+# Specify the #s of obversations for each component
+n <- 100
+k <- 2 # might want to extend it to kth mixture
+
+# Specify mean and sd of component 1 (or A)
+mu_1 <- 0
+sd_1 <- 1
+
+# Specify mean and sd of component 2 (or B)
+mu_2 <- 2 #4 #2
+sd_2 <- 1
+```
+
+Create a dataframe to store the simulated data
+```{r}
+set.seed(1234) # for reproducibility
+data <- tibble(
+  component = c(rep("A", n), rep("B", n)), 
+  value = c(rnorm(n, mean = mu_1, sd = sd_1), rnorm(n, mean = mu_2, sd = sd_2)) 
+)
+head(data)
+```
+
+### Plot simulated data
+
+```{r}
+data_flat_plot <- data %>%
+  ggplot(aes(x = value, y = "A", color = factor(component))) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Complete Dataset")
+#data_flat_plot
+```
+
+```{r}
+data_density_plot <- data %>%
+  ggplot(aes(x = value, color = factor(component))) +
+  geom_density()
+#data_density_plot
+```
+
+```{r}
+data_plot <- grid.arrange(data_flat_plot, data_density_plot)
+data_plot
+```
+
+Estimate the mean, var, and sd for this complete dataset (component A and B) using MLE
+```{r}
+data_summary <- data %>%
+  group_by(component) %>%
+  summarize(
+    mean = mean(value), 
+#    var = var(value), # never mind dnorm() takes sd
+    var = var(value),
+    sd = sd(value)
+  )
+data_summary
+```
+
+### Plot simulated data
+
+Assume there is a latent (or missing) variable
+```{r}
+data_flat_plot_latent <- data %>%
+  ggplot(aes(x = value, y = "A")) +
+  geom_point(alpha = 0.4) + 
+  ggtitle("Simulated Data -- Incomplete Dataset")
+#data_flat_plot_latent
+```
+
+```{r}
+data_density_plot_latent <- data %>%
+  ggplot(aes(x = value)) +
+  geom_density()
+#data_density_plot_latent
+```
+
+```{r}
+data_plot_latent <- grid.arrange(data_flat_plot_latent, data_density_plot_latent)
+data_plot_latent
+```
+
+We'll see how do we estimate the mean and sd for this incomplete dataset (with components removed) next 
+
+### Save out results
+
+```{r}
+write_rds(data, here("results", "data.rds"))
+write_rds(data_plot, here("results", "data_plot.rds"))
+write_rds(data_summary, here("results", "data_summary.rds"))
+write_rds(data_plot_latent, here("results", "data_plot_latent.rds"))
+```
+
