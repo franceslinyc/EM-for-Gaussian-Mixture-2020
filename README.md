@@ -9,9 +9,9 @@ Description: We first discuss the conditions under which EM algorithm can be use
 
 Documentation:
 
-Lin_ST541_Project is an abridged version of the full report
+[Lin_ST541_Project](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/Lin_ST541_Project.pdf) is an abridged version of the full report
 
-Lin_ST541_Project_FULL contains the full report
+[Lin_ST541_Project_FULL](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/Lin_ST541_Project_FULL.pdf) contains the full report
 
 Order of Running:
 
@@ -25,6 +25,6 @@ Order of Running:
 
 04_Reporting contains codes that produce the (abridged) report
 
-05_Presentation contains codes that produce slides for the presentation
+05_Presentation contains codes that produce slides for the [presentation](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/05_Presentation.pdf)
 
 06_Appendix contains a rough sketch of the implementation in words
