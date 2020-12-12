@@ -9,9 +9,9 @@ Description: We first discuss the conditions under which EM algorithm can be use
 
 Documentation:
 
-[Lin_ST541_Project](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/Lin_ST541_Project.pdf) is an abridged version of the full report
-
 [Lin_ST541_Project_FULL](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/Lin_ST541_Project_FULL.pdf) contains the full report
+
+[Lin_ST541_Project](https://github.com/franceslinyc/EM-for-Gaussian-Mixture-2020/blob/main/analysis/Lin_ST541_Project.pdf) is an abridged version of the full report
 
 Order of Running:
 
