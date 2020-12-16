@@ -117,7 +117,7 @@ Implementing
 
 ## Convergence: Iterate between E-step and M-step untill convergence 
 
-Compare log-likelihood of current iteration to log-likelihood of previous iteraction to see if the change is minimal 
+Compare log-likelihood of current iteration to log-likelihood of previous iteration to see if the change is minimal 
 
 If the change is minimal (i.e. convergence), we stop and return the final estimates. If it isn't, then we repeat another EM step.
 
