@@ -363,6 +363,8 @@ We see that the final estimates are not quite what we look for. This could be be
 
 We also see how EM algorithm can be applied to two-component Gaussian mixture model. A logical next step is to expand the algorithm for k-component Gaussian mixture model and for other mixture model such as multinomial. 
 
+\newpage
+
 # Reference 
 
 [Fitting a Mixture Model Using the Expectation-Maximization Algorithm in R](https://tinyheero.github.io/2016/01/03/gmm-em.html)
