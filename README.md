@@ -1,10 +1,6 @@
 # EM-for-Gaussian-Mixture-2020
 Final project for ST541 Probability, Computing, and Simulation in Statistics (PCS) at OSU
 
-EM (Expectation-Maximization) Algorithm with An Application for Gaussian Mixture Model
-
-Frances Lin
-
 ## Description
 
 Expand the E-step and the M-step of the EM algorithm in the context of the Gaussian mixture model, apply the algorithm to a simulated dataset that follows a two-component Gaussian mixture distribution, and evaluate its performance. 
